@@ -11,12 +11,13 @@ starterbot_id = None
 
 # constants
 RTM_READ_DELAY = 1 # 1 second delay between reading from RTM
-HERE_REGEX = "<(!here)>"
+HERE_REGEX = "<(!here)>(.*)"
 channel = secrets.leftovers_channel
 
-def has_here_mention(message_text):
+
+def parse_here_mention(message_text):
     matches = re.search(HERE_REGEX, message_text)
-    return bool(matches)
+    return (matches.group(1).strip(), matches.group(2).strip()) if matches else (None, None)
 
 
 if __name__ == "__main__":
@@ -26,8 +27,11 @@ if __name__ == "__main__":
         while True:
             for event in slack_client.rtm_read():
                 if event["type"] == "message" and not "subtype" in event:
-                    if has_here_mention(event["text"]):
+                    here_command, food = parse_here_mention(event["text"])
+                    if here_command:
                         print('TASTY LUCKYCAT YUM')
+                        print(food)
+                        os.system('say ' + food)
                     else:
                         print('no food for you')
             time.sleep(RTM_READ_DELAY)
