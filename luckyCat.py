@@ -3,16 +3,27 @@ import time
 import re
 import secrets
 from slackclient import SlackClient
+from pymata_aio.pymata3 import PyMata3
+from pymata_aio.constants import Constants
 
-# instantiate Slack client
+
 slack_client = SlackClient(secrets.luckycat_access_token)
-# starterbot's user ID in Slack: value is assigned after the bot starts up
 starterbot_id = None
 
-# constants
 RTM_READ_DELAY = 1 # 1 second delay between reading from RTM
 HERE_REGEX = "<(!here)>(.*)"
 channel = secrets.leftovers_channel
+
+PIN = 9
+
+
+def wave_arm(board):
+    for i in range(10):
+        board.analog_write(PIN, 180)
+        board.sleep(0.1)
+        board.analog_write(PIN, 0)
+        board.sleep(0.1)
+    board.analog_write(90)
 
 
 def parse_here_mention(message_text):
@@ -24,6 +35,10 @@ if __name__ == "__main__":
     if slack_client.rtm_connect(with_team_state=False):
         print("LuckyCat connected and running!")
         starterbot_id = slack_client.api_call("auth.test")["user_id"]
+
+        board = PyMata3(2)
+        board.set_pin_mode(PIN, Constants.PWM)
+
         while True:
             for event in slack_client.rtm_read():
                 if event["type"] == "message" and not "subtype" in event:
@@ -32,6 +47,7 @@ if __name__ == "__main__":
                         print('TASTY LUCKYCAT YUM')
                         print(food)
                         os.system('say ' + food)
+                        wave_arm(board)
                     else:
                         print('no food for you')
             time.sleep(RTM_READ_DELAY)
