@@ -11,7 +11,7 @@ slack_client = SlackClient(secrets.luckycat_access_token)
 starterbot_id = None
 
 RTM_READ_DELAY = 1 # 1 second delay between reading from RTM
-HERE_REGEX = "<(!here)>(.*)"
+HERE_REGEX = "(.*)<(!here)>(.*)"
 channel = secrets.leftovers_channel
 
 PIN = 9
@@ -28,7 +28,7 @@ def wave_arm(board):
 
 def parse_here_mention(message_text):
     matches = re.search(HERE_REGEX, message_text)
-    return (matches.group(1).strip(), matches.group(2).strip()) if matches else (None, None)
+    return " ".join([matches.group(1).strip(), matches.group(3).strip()]) if matches else None
 
 
 if __name__ == "__main__":
@@ -37,14 +37,13 @@ if __name__ == "__main__":
         starterbot_id = slack_client.api_call("auth.test")["user_id"]
 
         board = PyMata3(2)
-        # board.set_pin_mode(PIN, Constants.PWM)
         board.servo_config(PIN)
 
         while True:
             for event in slack_client.rtm_read():
                 if event["type"] == "message" and not "subtype" in event:
-                    here_command, food = parse_here_mention(event["text"])
-                    if here_command:
+                    food = parse_here_mention(event["text"])
+                    if food:
                         print('TASTY LUCKYCAT YUM')
                         print(food)
                         os.system('say "' + food + '"')
