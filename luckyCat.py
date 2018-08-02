@@ -18,12 +18,12 @@ PIN = 9
 
 
 def wave_arm(board):
-    for i in range(10):
+    for i in range(4):
         board.analog_write(PIN, 180)
-        board.sleep(0.1)
+        board.sleep(0.5)
         board.analog_write(PIN, 0)
-        board.sleep(0.1)
-    board.analog_write(90)
+        board.sleep(0.5)
+    board.analog_write(PIN, 92)
 
 
 def parse_here_mention(message_text):
@@ -37,7 +37,8 @@ if __name__ == "__main__":
         starterbot_id = slack_client.api_call("auth.test")["user_id"]
 
         board = PyMata3(2)
-        board.set_pin_mode(PIN, Constants.PWM)
+        # board.set_pin_mode(PIN, Constants.PWM)
+        board.servo_config(PIN)
 
         while True:
             for event in slack_client.rtm_read():
@@ -46,7 +47,7 @@ if __name__ == "__main__":
                     if here_command:
                         print('TASTY LUCKYCAT YUM')
                         print(food)
-                        os.system('say ' + food)
+                        os.system('say "' + food + '"')
                         wave_arm(board)
                     else:
                         print('no food for you')
